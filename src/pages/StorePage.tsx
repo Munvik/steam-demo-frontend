@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
-import { Alert, Box, Button, Card, CardContent, Chip, InputAdornment, MenuItem, Skeleton, Stack, TextField, Typography } from '@mui/material'
-import { SearchRounded, LocalFireDepartmentRounded, SportsEsportsRounded } from '@mui/icons-material'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Alert, Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Fade, InputAdornment, MenuItem, Skeleton, Stack, Step, StepLabel, Stepper, TextField, Typography } from '@mui/material'
+import { AutorenewRounded, CheckCircleRounded, HourglassBottomRounded, LocalFireDepartmentRounded, SearchRounded, SportsEsportsRounded } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { GameCard } from '../components/ui/GameCard'
 import { PageState } from '../components/ui/PageState'
@@ -17,11 +17,31 @@ const sortOptions = [
   { value: 'rating', label: 'Rating' },
 ]
 
+const publishingSteps = [
+  'Building...',
+  'Packaging...',
+  'Uploading assets...',
+  'Publishing...',
+  'Completed',
+]
+
+type PublishingPhase = 'verification' | 'wizard' | 'review'
+
 export const StorePage = () => {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | ''>('')
   const [sortBy, setSortBy] = useState('title')
+  const [isPublishingDialogOpen, setIsPublishingDialogOpen] = useState(false)
+  const [publishingPhase, setPublishingPhase] = useState<PublishingPhase>('verification')
+  const [isRollingVerification, setIsRollingVerification] = useState(false)
+  const [verificationRollValue, setVerificationRollValue] = useState(1)
+  const [verificationSuccess, setVerificationSuccess] = useState(false)
+  const [completedWizardStep, setCompletedWizardStep] = useState(-1)
+
+  const rollingIntervalRef = useRef<number | null>(null)
+  const flowTimeoutsRef = useRef<number[]>([])
+
   const debouncedSearch = useDebouncedValue(search, 350)
 
   const categoriesQuery = useCategories()
@@ -33,6 +53,99 @@ export const StorePage = () => {
   })
 
   const categoryOptions = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data])
+
+  const clearFlowTimers = () => {
+    if (rollingIntervalRef.current !== null) {
+      window.clearInterval(rollingIntervalRef.current)
+      rollingIntervalRef.current = null
+    }
+
+    flowTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId))
+    flowTimeoutsRef.current = []
+  }
+
+  const resetPublishingFlow = () => {
+    clearFlowTimers()
+    setPublishingPhase('verification')
+    setIsRollingVerification(false)
+    setVerificationRollValue(1)
+    setVerificationSuccess(false)
+    setCompletedWizardStep(-1)
+  }
+
+  const openPublishingDialog = () => {
+    resetPublishingFlow()
+    setIsPublishingDialogOpen(true)
+  }
+
+  const closePublishingDialog = () => {
+    setIsPublishingDialogOpen(false)
+    resetPublishingFlow()
+  }
+
+  const startPublishingWizard = () => {
+    setPublishingPhase('wizard')
+    setCompletedWizardStep(-1)
+
+    const runStep = (stepIndex: number) => {
+      if (stepIndex >= publishingSteps.length) {
+        const reviewTimeout = window.setTimeout(() => {
+          setPublishingPhase('review')
+        }, 1000)
+
+        flowTimeoutsRef.current.push(reviewTimeout)
+        return
+      }
+
+      const stepDelay = 700 + Math.floor(Math.random() * 301)
+
+      const stepTimeout = window.setTimeout(() => {
+        setCompletedWizardStep(stepIndex)
+        runStep(stepIndex + 1)
+      }, stepDelay)
+
+      flowTimeoutsRef.current.push(stepTimeout)
+    }
+
+    runStep(0)
+  }
+
+  const handleRollVerification = () => {
+    if (isRollingVerification) {
+      return
+    }
+
+    clearFlowTimers()
+    setVerificationSuccess(false)
+    setIsRollingVerification(true)
+
+    rollingIntervalRef.current = window.setInterval(() => {
+      setVerificationRollValue(1 + Math.floor(Math.random() * 6))
+    }, 90)
+
+    const rollDuration = 2200 + Math.floor(Math.random() * 801)
+
+    const stopRollTimeout = window.setTimeout(() => {
+      if (rollingIntervalRef.current !== null) {
+        window.clearInterval(rollingIntervalRef.current)
+        rollingIntervalRef.current = null
+      }
+
+      setVerificationRollValue(6)
+      setIsRollingVerification(false)
+      setVerificationSuccess(true)
+
+      const transitionTimeout = window.setTimeout(() => {
+        startPublishingWizard()
+      }, 900)
+
+      flowTimeoutsRef.current.push(transitionTimeout)
+    }, rollDuration)
+
+    flowTimeoutsRef.current.push(stopRollTimeout)
+  }
+
+  useEffect(() => () => clearFlowTimers(), [])
 
   return (
     <Stack spacing={3.5}>
@@ -55,7 +168,7 @@ export const StorePage = () => {
             Search the store, filter by category, sort the catalog, and jump into the game details page.
           </Typography>
           <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-            <Button variant="contained" startIcon={<SportsEsportsRounded />} onClick={() => navigate('/games/create')}>
+            <Button variant="contained" startIcon={<SportsEsportsRounded />} onClick={openPublishingDialog}>
               Add game
             </Button>
             <Button variant="outlined" startIcon={<LocalFireDepartmentRounded />} onClick={() => navigate('/library')}>
@@ -174,12 +287,169 @@ export const StorePage = () => {
                 title="No games found"
                 description="Try another search term, clear the category filter, or create a new game in the backend-backed form."
                 actionLabel="Add a game"
-                onAction={() => navigate('/games/create')}
+                onAction={openPublishingDialog}
               />
             )}
           </Stack>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={isPublishingDialogOpen}
+        onClose={closePublishingDialog}
+        fullWidth
+        maxWidth="sm"
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 3,
+              border: '1px solid rgba(102, 192, 244, 0.24)',
+              background:
+                'linear-gradient(160deg, rgba(21, 32, 47, 0.98) 0%, rgba(12, 18, 28, 0.98) 55%, rgba(8, 12, 19, 0.98) 100%)',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>
+          {publishingPhase === 'verification' ? 'Steam Publisher Verification' : null}
+          {publishingPhase === 'wizard' ? 'Steam Publishing Wizard' : null}
+          {publishingPhase === 'review' ? '⚠ Community Feedback' : null}
+        </DialogTitle>
+
+        <DialogContent>
+          {publishingPhase === 'verification' ? (
+            <Stack spacing={2.25} sx={{ py: 1 }}>
+              <Typography variant="body1" color="text.secondary">
+                Press the roll button to request Steam Publisher verification.
+              </Typography>
+
+              <Box
+                sx={{
+                  borderRadius: 3,
+                  border: '1px solid rgba(102, 192, 244, 0.24)',
+                  backgroundColor: 'rgba(102, 192, 244, 0.07)',
+                  p: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  variant="h2"
+                  sx={{
+                    minWidth: 80,
+                    textAlign: 'center',
+                    color: '#8fd7ff',
+                    transform: isRollingVerification ? 'scale(1.06)' : 'scale(1)',
+                    transition: 'transform 120ms ease-out',
+                  }}
+                >
+                  {verificationRollValue}
+                </Typography>
+              </Box>
+
+              <Button
+                variant="contained"
+                onClick={handleRollVerification}
+                disabled={isRollingVerification || verificationSuccess}
+              >
+                Roll Steam Publisher Verification
+              </Button>
+
+              {verificationSuccess ? (
+                <Fade in timeout={380}>
+                  <Alert severity="success" icon={<CheckCircleRounded />}>
+                    Steam Publisher Verification Successful
+                  </Alert>
+                </Fade>
+              ) : null}
+            </Stack>
+          ) : null}
+
+          {publishingPhase === 'wizard' ? (
+            <Stack spacing={2.2} sx={{ py: 1 }}>
+              <Typography variant="body1" color="text.secondary">
+                Initializing Steam-style partner pipeline...
+              </Typography>
+
+              <Stepper orientation="vertical" activeStep={Math.max(completedWizardStep + 1, 0)}>
+                {publishingSteps.map((step, index) => (
+                  <Step key={step} completed={index <= completedWizardStep}>
+                    <StepLabel
+                      icon={
+                        index <= completedWizardStep ? (
+                          <CheckCircleRounded sx={{ color: '#4caf50' }} />
+                        ) : index === completedWizardStep + 1 ? (
+                          <AutorenewRounded sx={{ color: '#8fd7ff' }} />
+                        ) : (
+                          <HourglassBottomRounded sx={{ color: 'rgba(255,255,255,0.45)' }} />
+                        )
+                      }
+                    >
+                      <Fade in={index <= completedWizardStep + 1} timeout={420 + index * 70}>
+                        <Typography variant="body1">{step}</Typography>
+                      </Fade>
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            </Stack>
+          ) : null}
+
+          {publishingPhase === 'review' ? (
+            <Stack spacing={2.2} sx={{ py: 1 }}>
+              <Box
+                sx={{
+                  borderRadius: 3,
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  backgroundColor: 'rgba(255,255,255,0.02)',
+                  p: 2.2,
+                }}
+              >
+                <Stack spacing={1.4}>
+                  <Typography variant="overline" color="text.secondary">
+                    Steam Partner Program simulation
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    Potential wishlists:
+                  </Typography>
+                  <Typography variant="h3" sx={{ color: '#8fd7ff' }}>
+                    3
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    Potential refunds:
+                  </Typography>
+                  <Typography variant="h3" sx={{ color: '#ff8e72' }}>
+                    428
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    Recommendation:
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    Maybe cook a little longer.
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    [Back to Store]
+                  </Typography>
+                </Stack>
+              </Box>
+            </Stack>
+          ) : null}
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2.4, pt: 0.2 }}>
+          {publishingPhase === 'review' ? (
+            <Button variant="contained" onClick={closePublishingDialog}>
+              Return to Store
+            </Button>
+          ) : (
+            <Button variant="text" onClick={closePublishingDialog}>
+              Close
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </Stack>
   )
 }
