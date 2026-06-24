@@ -25,6 +25,8 @@ const publishingSteps = [
   'Completed',
 ]
 
+const randInt = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1))
+
 type PublishingPhase = 'verification' | 'wizard' | 'review'
 
 export const StorePage = () => {
@@ -87,8 +89,8 @@ export const StorePage = () => {
     setPublishingPhase('wizard')
     setCompletedWizardStep(-1)
 
-    const runStep = (stepIndex: number) => {
-      if (stepIndex >= publishingSteps.length) {
+    const runStep = (i: number) => {
+      if (i >= publishingSteps.length) {
         const reviewTimeout = window.setTimeout(() => {
           setPublishingPhase('review')
         }, 1000)
@@ -97,11 +99,11 @@ export const StorePage = () => {
         return
       }
 
-      const stepDelay = 700 + Math.floor(Math.random() * 301)
+      const stepDelay = randInt(700, 1000)
 
       const stepTimeout = window.setTimeout(() => {
-        setCompletedWizardStep(stepIndex)
-        runStep(stepIndex + 1)
+        setCompletedWizardStep(i)
+        runStep(i + 1)
       }, stepDelay)
 
       flowTimeoutsRef.current.push(stepTimeout)
@@ -120,10 +122,10 @@ export const StorePage = () => {
     setIsRollingVerification(true)
 
     rollingIntervalRef.current = window.setInterval(() => {
-      setVerificationRollValue(1 + Math.floor(Math.random() * 6))
+      setVerificationRollValue(randInt(1, 6))
     }, 90)
 
-    const rollDuration = 2200 + Math.floor(Math.random() * 801)
+    const rollDuration = randInt(2200, 3000)
 
     const stopRollTimeout = window.setTimeout(() => {
       if (rollingIntervalRef.current !== null) {

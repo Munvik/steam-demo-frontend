@@ -31,7 +31,7 @@ const gameSchema = z.object({
   categoryId: z.number().int().positive('Choose a category'),
 })
 
-const publishingSteps = ['Building...', 'Packaging...', 'Uploading assets...', 'Publishing...', 'Completed']
+const publishFlowSteps = ['Building...', 'Packaging...', 'Uploading assets...', 'Publishing...', 'Completed']
 
 const mockCategories: CategoryDto[] = [
   { id: 1, name: 'Action' },
@@ -53,6 +53,9 @@ export const CreateGamePage = () => {
 
   const rollingIntervalRef = useRef<number | null>(null)
   const flowTimeoutsRef = useRef<number[]>([])
+
+  const randomBetween = (min: number, max: number) =>
+    min + Math.floor(Math.random() * (max - min + 1))
 
   const defaultValues = useMemo<GameFormValues>(
     () => ({
@@ -97,7 +100,7 @@ export const CreateGamePage = () => {
     setCompletedWizardStep(-1)
   }
 
-  const openPublishingDialog = () => {
+  const openFakePublishDialog = () => {
     resetPublishingFlow()
     setIsPublishingDialogOpen(true)
   }
@@ -116,8 +119,8 @@ export const CreateGamePage = () => {
     setPublishingPhase('wizard')
     setCompletedWizardStep(-1)
 
-    const runStep = (stepIndex: number) => {
-      if (stepIndex >= publishingSteps.length) {
+    const runStep = (idx: number) => {
+      if (idx >= publishFlowSteps.length) {
         const reviewTimeout = window.setTimeout(() => {
           setPublishingPhase('review')
         }, 1000)
@@ -126,11 +129,11 @@ export const CreateGamePage = () => {
         return
       }
 
-      const stepDelay = 700 + Math.floor(Math.random() * 301)
+      const stepDelay = randomBetween(700, 1000)
 
       const stepTimeout = window.setTimeout(() => {
-        setCompletedWizardStep(stepIndex)
-        runStep(stepIndex + 1)
+        setCompletedWizardStep(idx)
+        runStep(idx + 1)
       }, stepDelay)
 
       flowTimeoutsRef.current.push(stepTimeout)
@@ -149,10 +152,10 @@ export const CreateGamePage = () => {
     setIsRollingVerification(true)
 
     rollingIntervalRef.current = window.setInterval(() => {
-      setVerificationRollValue(1 + Math.floor(Math.random() * 20))
+      setVerificationRollValue(randomBetween(1, 20))
     }, 100)
 
-    const rollDuration = 2000 + Math.floor(Math.random() * 1001)
+    const rollDuration = randomBetween(2000, 3000)
 
     const stopRollTimeout = window.setTimeout(() => {
       if (rollingIntervalRef.current !== null) {
@@ -177,7 +180,7 @@ export const CreateGamePage = () => {
   useEffect(() => () => clearFlowTimers(), [])
 
   const submitGame = async (_values: GameFormValues) => {
-    openPublishingDialog()
+    openFakePublishDialog()
     reset(defaultValues)
   }
 
@@ -322,7 +325,7 @@ export const CreateGamePage = () => {
                 </Typography>
               </Stack>
 
-              {publishingSteps.map((step, index) => {
+              {publishFlowSteps.map((step, index) => {
                 const isVisible = index <= completedWizardStep
 
                 return (
