@@ -4,6 +4,7 @@ import { CheckCircleRounded, ShoppingCartRounded, StarRounded } from '@mui/icons
 import { useNavigate, useParams } from 'react-router-dom'
 import { useBuyGameMutation, useGame } from '../features/games/useGames'
 import { formatCurrency, formatRating } from '../utils/format'
+import { useLibrary } from '../features/library/useLibrary'
 
 export const GameDetailsPage = () => {
   const navigate = useNavigate()
@@ -15,6 +16,8 @@ export const GameDetailsPage = () => {
 
   const game = gameQuery.data
   const purchaseSuccess = useMemo(() => buyMutation.isSuccess, [buyMutation.isSuccess])
+  const library = useLibrary()
+  const isGameInLibrary = library.data?.some((item) => item.id === gameId) ?? false
 
   return (
     <Stack spacing={3.5}>
@@ -108,12 +111,29 @@ export const GameDetailsPage = () => {
                   </Box>
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                    <Button
+                    {isGameInLibrary ? 
+                    (
+                      <Button
                       variant="contained"
                       size="large"
                       startIcon={<ShoppingCartRounded />}
                       onClick={async () => {
-                        await buyMutation.mutateAsync(game.id)
+                        await buyMutation.mutateAsync(game)
+                        setSnackbarOpen(true)
+                      }}
+                      disabled={true}
+                      fullWidth
+                    >
+                      Game in library
+                    </Button>
+                    ) :
+                    (
+                      <Button
+                      variant="contained"
+                      size="large"
+                      startIcon={<ShoppingCartRounded />}
+                      onClick={async () => {
+                        await buyMutation.mutateAsync(game)
                         setSnackbarOpen(true)
                       }}
                       disabled={buyMutation.isPending}
@@ -121,6 +141,7 @@ export const GameDetailsPage = () => {
                     >
                       Buy game
                     </Button>
+                    )}
                     <Button variant="outlined" size="large" onClick={() => navigate('/')} fullWidth>
                       Back to store
                     </Button>

@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { addGameToLocalLibrary, updateLocalLibraryStatus } from './libraryStorage'
 import type {
   CreateGameCommand,
   GameDto,
@@ -58,13 +59,13 @@ export const deleteGame = async (id: number): Promise<void> => {
   await apiClient.delete(`/api/Games/${id}`)
 }
 
-export const buyGame = async (id: number): Promise<void> => {
-  await apiClient.post(`/api/store/games/${id}/buy`)
+export const buyGame = async (game: GameDto): Promise<void> => {
+  addGameToLocalLibrary(game)
 }
 
 export const updateLibraryStatus = async (
   gameId: number,
   payload: UpdateLibraryStatusRequest,
 ): Promise<void> => {
-  await apiClient.patch(`/api/library/${gameId}/status`, payload)
+  updateLocalLibraryStatus(gameId, payload.status)
 }

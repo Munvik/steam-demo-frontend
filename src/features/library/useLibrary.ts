@@ -5,6 +5,5 @@ import { queryKeys } from '../../api/queryKeys'
 export const useLibrary = () =>
   useQuery({
     queryKey: queryKeys.library,
-    queryFn: getLibrary,
-    staleTime: 30 * 1000,
+    queryFn: getLibrary
   })

@@ -75,7 +75,7 @@ export const useBuyGameMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: number) => buyGame(id),
+    mutationFn: (game: GameDto) => buyGame(game),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.library })
     },
