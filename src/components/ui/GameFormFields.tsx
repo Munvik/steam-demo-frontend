@@ -130,7 +130,7 @@ export const GameFormFields = ({ control, categories, disabled = false }: GameFo
     <Box sx={{ gridColumn: '1 / -1' }}>
       <Stack spacing={0.5}>
         <Typography variant="caption" color="text.secondary">
-          The backend owns the final persisted game record. Use a reachable image URL to preview the game artwork.
+          Use a reachable image URL to preview the game artwork.
         </Typography>
       </Stack>
     </Box>

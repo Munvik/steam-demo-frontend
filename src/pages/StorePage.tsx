@@ -48,15 +48,11 @@ export const StorePage = () => {
         }}
       >
         <Stack spacing={2.5} sx={{ position: 'relative', zIndex: 1, maxWidth: 840 }}>
-          <Chip
-            label="Live backend data"
-            sx={{ alignSelf: 'flex-start', backgroundColor: 'rgba(102, 192, 244, 0.12)', color: '#8fd7ff' }}
-          />
           <Typography variant="h2" component="h1">
             Discover, buy, and manage games from your Steam-style catalog.
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 760 }}>
-            Search the store, filter by category, sort the catalog, and jump into the game details page without leaving the backend-backed experience.
+            Search the store, filter by category, sort the catalog, and jump into the game details page.
           </Typography>
           <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
             <Button variant="contained" startIcon={<SportsEsportsRounded />} onClick={() => navigate('/games/create')}>
@@ -74,7 +70,6 @@ export const StorePage = () => {
           <StatCard
             label="Owned games"
             value={dashboardQuery.data ? formatNumber(dashboardQuery.data.ownedGames) : '0'}
-            subtitle="From the backend dashboard endpoint"
           />
         </Box>
         <Box>
@@ -88,7 +83,7 @@ export const StorePage = () => {
           <StatCard
             label="Total spent"
             value={dashboardQuery.data ? formatCurrency(dashboardQuery.data.totalSpent) : '$0'}
-            subtitle="Live totals calculated by the API"
+            subtitle="Live totals calculated by store"
           />
         </Box>
       </Box>
@@ -151,9 +146,6 @@ export const StorePage = () => {
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 800 }} gutterBottom>
                 Featured catalog
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Results are loaded directly from the backend and refreshed by React Query.
               </Typography>
             </Box>
 
