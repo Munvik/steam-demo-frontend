@@ -80,24 +80,7 @@ export const AppLayout = () => {
             <ListItemText primary={item.label} />
           </ListItemButton>
         ))}
-      </List>
-      <Box sx={{ mt: 'auto', p: 3 }}>
-        <Box
-          sx={{
-            p: 2,
-            borderRadius: 3,
-            background: 'linear-gradient(180deg, rgba(102, 192, 244, 0.10), rgba(27, 154, 170, 0.06))',
-            border: '1px solid rgba(102, 192, 244, 0.16)',
-          }}
-        >
-          <Typography variant="subtitle2" sx={{ fontWeight: 800 }} gutterBottom>
-            Connected backend
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Live data is loaded from the ASP.NET Core API on localhost:7226.
-          </Typography>
-        </Box>
-      </Box>
+      </List>  
     </Box>
   )
 
@@ -119,13 +102,7 @@ export const AppLayout = () => {
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Steam Forge
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Steam-inspired frontend powered by your ASP.NET Core backend
-              </Typography>
             </Box>
-            <Button variant="outlined" color="primary" size="small">
-              {mobile ? 'Mobile layout' : 'Desktop layout'}
-            </Button>
           </Stack>
         </Toolbar>
       </AppBar>

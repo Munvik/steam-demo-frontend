@@ -19,7 +19,7 @@ export const GameDetailsPage = () => {
   return (
     <Stack spacing={3.5}>
       {gameQuery.isError ? (
-        <Alert severity="error">Unable to load the game details. The backend may be unavailable.</Alert>
+        <Alert severity="error">Unable to load the game details. The server may be unavailable.</Alert>
       ) : null}
 
       {gameQuery.isLoading || !game ? (
@@ -78,7 +78,6 @@ export const GameDetailsPage = () => {
               <CardContent>
                 <Stack spacing={2.5}>
                   <Stack spacing={1}>
-                    <Chip label={game.categoryName ?? 'Category'} sx={{ alignSelf: 'flex-start' }} />
                     <Typography variant="h3" component="h1">
                       {game.title}
                     </Typography>
@@ -89,7 +88,7 @@ export const GameDetailsPage = () => {
 
                   <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap' }}>
                     <Chip icon={<StarRounded />} label={formatRating(game.rating)} />
-                    <Chip label={`Category ${game.categoryId}`} variant="outlined" />
+                    <Chip label={`${game.categoryName}`} variant="outlined" />
                   </Stack>
 
                   <Box
