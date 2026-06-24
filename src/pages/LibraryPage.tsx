@@ -4,7 +4,6 @@ import { SearchRounded, StorageRounded } from '@mui/icons-material'
 import { useLibrary } from '../features/library/useLibrary'
 import { useUpdateLibraryStatusMutation } from '../features/games/useGames'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
-import type { GameStatus } from '../types/api'
 import { gameStatusOptions, getGameStatusLabel } from '../utils/gameStatus'
 import { formatCurrency, formatRating } from '../utils/format'
 
@@ -76,23 +75,9 @@ export const LibraryPage = () => {
                   },
                 }}
               />
-              <TextField
-                select
-                label="Status"
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
-                sx={{ minWidth: 220 }}
-              >
-                <MenuItem value="">All statuses</MenuItem>
-                {gameStatusOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
             </Stack>
 
-            {libraryQuery.isError ? <Alert severity="error">Unable to load the library from the backend.</Alert> : null}
+            {libraryQuery.isError ? <Alert severity="error">Unable to load the library from the server.</Alert> : null}
 
             {libraryQuery.isLoading ? (
               <Stack spacing={2}>
@@ -135,30 +120,6 @@ export const LibraryPage = () => {
                                 <Chip label={formatRating(item.rating ?? 0)} size="small" variant="outlined" />
                                 <Chip label={formatCurrency(item.price ?? 0)} size="small" variant="outlined" />
                               </Stack>
-                            </Stack>
-                          </Box>
-                          <Box>
-                            <Stack spacing={1.5}>
-                              <TextField
-                                select
-                                label="Update status"
-                                defaultValue={item.status}
-                                onChange={async (event) => {
-                                  await updateStatusMutation.mutateAsync({
-                                    gameId: item.gameId ?? item.id ?? 0,
-                                    status: Number(event.target.value) as GameStatus,
-                                  })
-                                }}
-                              >
-                                {gameStatusOptions.map((option) => (
-                                  <MenuItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </MenuItem>
-                                ))}
-                              </TextField>
-                              <Typography variant="caption" color="text.secondary">
-                                Status changes are saved through the backend PATCH endpoint.
-                              </Typography>
                             </Stack>
                           </Box>
                         </Box>
